@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>VPN Dashboard</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',sans-serif;background:#0f1117;color:#e2e4f0;min-height:100vh}
+.layout{display:flex;min-height:100vh}
+.sidebar{width:230px;background:#1a1d27;border-right:1px solid #2e3245;display:flex;flex-direction:column;padding:20px 0}
+.logo{padding:0 20px 20px;border-bottom:1px solid #2e3245;display:flex;align-items:center;gap:10px}
+.logo-icon{width:34px;height:34px;border-radius:8px;background:linear-gradient(135deg,#6c63ff,#00d4aa);display:flex;align-items:center;justify-content:center;font-size:16px}
+.logo-text{font-weight:700;font-size:14px}
+.logo-sub{font-size:11px;color:#7b7f9e}
+nav{padding:12px 8px;flex:1}
+.nav-item{display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:7px;color:#7b7f9e;cursor:pointer;font-size:13px;margin-bottom:2px}
+.nav-item:hover,.nav-item.active{background:#252836;color:#e2e4f0}
+.nav-item.active{color:#6c63ff}
+.sidebar-foot{padding:14px 20px;border-top:1px solid #2e3245}
+.pill{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;background:#252836;font-size:13px}
+.dot{width:8px;height:8px;border-radius:50%;background:#22c55e;animation:pulse 2s infinite}
+.dot.off{background:#ff5f5f;animation:none}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.main{flex:1;overflow-y:auto}
+.topbar{padding:18px 28px;border-bottom:1px solid #2e3245;background:#1a1d27;display:flex;align-items:center;justify-content:space-between}
+.topbar h1{font-size:18px;font-weight:600}
+.btn{padding:7px 14px;border-radius:7px;border:none;cursor:pointer;font-size:13px;font-weight:500}
+.btn-p{background:#6c63ff;color:#fff}
+.btn-p:hover{background:#5a52e0}
+.btn-o{background:transparent;color:#e2e4f0;border:1px solid #2e3245}
+.btn-o:hover{background:#252836}
+.content{padding:28px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
+.stat{background:#1a1d27;border:1px solid #2e3245;border-radius:10px;padding:18px}
+.slabel{font-size:11px;color:#7b7f9e;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.sval{font-size:26px;font-weight:700;margin-bottom:3px}
+.ssub{font-size:12px;color:#22c55e}
+.panels{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.panel{background:#1a1d27;border:1px solid #2e3245;border-radius:10px;overflow:hidden}
+.panel-full{grid-column:1/-1}
+.ph{padding:14px 18px;border-bottom:1px solid #2e3245;display:flex;align-items:center;justify-content:space-between;font-size:13px;font-weight:600}
+.badge{padding:3px 8px;border-radius:20px;font-size:11px;font-weight:600}
+.bg-g{background:rgba(34,197,94,.15);color:#22c55e}
+.bg-w{background:rgba(255,179,64,.15);color:#ffb340}
+.bg-m{background:#252836;color:#7b7f9e}
+.peer{display:grid;grid-template-columns:2fr 1fr 1fr 1.4fr;gap:10px;align-items:center;padding:12px 18px;border-bottom:1px solid #2e3245;font-size:13px}
+.peer:hover{background:#252836}
+.peer:last-child{border-bottom:none}
+.pname{display:flex;align-items:center;gap:7px;font-weight:500}
+.mu{color:#7b7f9e;font-size:12px}
+.mn{font-family:monospace}
+.svc-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px}
+.svc{background:#252836;border:1px solid #2e3245;border-radius:8px;padding:12px;display:flex;align-items:center;gap:10px}
+.svc-icon{width:32px;height:32px;border-radius:7px;background:linear-gradient(135deg,#6c63ff,#9b87ff);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.svc-name{font-size:13px;font-weight:500;margin-bottom:1px}
+.svc-url{font-size:11px;color:#7b7f9e;font-family:monospace}
+.chart-wrap{padding:18px}
+.bars{display:flex;align-items:flex-end;gap:5px;height:100px}
+.bg-group{display:flex;gap:2px;align-items:flex-end;flex:1}
+.b{flex:1;border-radius:3px 3px 0 0;min-height:3px}
+.b-rx{background:#6c63ff}
+.b-tx{background:#00d4aa}
+.clabels{display:flex;gap:5px;margin-top:6px}
+.cl{flex:1;text-align:center;font-size:10px;color:#7b7f9e}
+.legend{display:flex;gap:14px;margin-bottom:10px}
+.li{display:flex;align-items:center;gap:5px;font-size:12px;color:#7b7f9e}
+.ld{width:8px;height:8px;border-radius:2px}
+.wg-btn{display:block;margin:12px 14px;padding:10px 14px;border-radius:8px;background:linear-gradient(135deg,rgba(108,99,255,.15),rgba(0,212,170,.15));border:1px solid rgba(108,99,255,.3);font-size:13px;text-decoration:none;color:#e2e4f0;text-align:center}
+.loading{padding:20px;text-align:center;color:#7b7f9e;font-size:13px}
+@media(max-width:800px){.stats{grid-template-columns:1fr 1fr}.panels{grid-template-columns:1fr}.sidebar{display:none}}
+</style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-icon">&#x1F6E1;</div>
+      <div><div class="logo-text">VPN Gateway</div><div class="logo-sub">Internal Access</div></div>
+    </div>
+    <nav>
+      <div class="nav-item active">&#x1F4CA; Overview</div>
+      <div class="nav-item">&#x1F465; Peers</div>
+      <div class="nav-item">&#x1F512; Internal Services</div>
+      <div class="nav-item" onclick="window.open('http://localhost:51821','_blank')">&#x2699;&#xFE0F; WG-Easy Admin</div>
+    </nav>
+    <div class="sidebar-foot">
+      <div class="pill"><div class="dot" id="dot"></div><span id="vpnStatus">Checking...</span></div>
+    </div>
+  </aside>
+  <div class="main">
+    <div class="topbar">
+      <h1>VPN Dashboard</h1>
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-o" onclick="refresh()">&#x21BB; Refresh</button>
+        <button class="btn btn-p" onclick="window.open('http://localhost:51821','_blank')">Open WG-Easy</button>
+      </div>
+    </div>
+    <div class="content">
+      <div class="stats">
+        <div class="stat"><div class="slabel">Active Peers</div><div class="sval" id="sPeers">-</div><div class="ssub" id="sPeersSub">loading</div></div>
+        <div class="stat"><div class="slabel">Internal Services</div><div class="sval" id="sSvc">-</div><div class="ssub" id="sSvcSub">loading</div></div>
+        <div class="stat"><div class="slabel">Bandwidth</div><div class="sval" id="sBw">-</div><div class="ssub">this session</div></div>
+        <div class="stat"><div class="slabel">Uptime</div><div class="sval" id="sUp">-</div><div class="ssub">WireGuard</div></div>
+      </div>
+      <div class="panels">
+        <div class="panel">
+          <div class="ph">VPN Peers <span class="badge bg-g" id="peerBadge">0 connected</span></div>
+          <div id="peerList"><div class="loading">Loading...</div></div>
+        </div>
+        <div class="panel">
+          <div class="ph">Internal Services <span class="badge bg-m" id="svcBadge">-</span></div>
+          <div id="svcList"><div class="loading">Loading...</div></div>
+          <a class="wg-btn" href="http://localhost:51821" target="_blank">&#x1F517; Open WireGuard Admin</a>
+        </div>
+        <div class="panel panel-full">
+          <div class="ph">Traffic <div class="legend"><div class="li"><div class="ld" style="background:#6c63ff"></div>RX</div><div class="li"><div class="ld" style="background:#00d4aa"></div>TX</div></div></div>
+          <div class="chart-wrap">
+            <div class="bars" id="bars"></div>
+            <div class="clabels" id="clabels"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+const traffic=Array.from({length:12},()=>({rx:Math.random()*80+10,tx:Math.random()*40+5}));
+const icons=["\u{1F5C2}","\u{1F4B0}","\u{1F6E0}","\u{1F4E1}"];
+
+async function fetchPeers(){
+  try{
+    const d=(await(await fetch("/api/vpn/peers")).json()).data||[];
+    const con=d.filter(p=>p.connected).length;
+    document.getElementById("sPeers").textContent=d.length;
+    document.getElementById("sPeersSub").textContent=con+" active";
+    document.getElementById("peerBadge").textContent=con+" connected";
+    document.getElementById("peerList").innerHTML=d.map(p=>
+      '<div class="peer">'+
+      '<div class="pname">'+(p.connected?"\u{1F7E2}":"\u26AB")+" "+p.name+"</div>"+
+      '<div class="mu mn">'+p.ip+"</div>"+
+      '<span class="badge '+(p.connected?"bg-g":"bg-m")+'">'+(p.connected?"Online":"Offline")+"</span>"+
+      '<div class="mu">&#x2193;'+p.rx+" &#x2191;"+p.tx+"</div>"+
+      "</div>"
+    ).join("");
+  }catch(e){document.getElementById("peerList").innerHTML='<div class="loading">Could not load peers</div>';}
+}
+
+async function fetchServices(){
+  try{
+    const res=await(await fetch("/api/services")).json();
+    const d=res.data||[];
+    const on=d.filter(s=>s.status==="online").length;
+    document.getElementById("sSvc").textContent=d.length;
+    document.getElementById("sSvcSub").textContent=on+"/"+d.length+" online";
+    document.getElementById("svcBadge").textContent=d.length+" services";
+    document.getElementById("svcList").innerHTML="<div class=\"svc-grid\">"+d.map((s,i)=>
+      '<div class="svc"><div class="svc-icon">'+icons[i%icons.length]+"</div>"+
+      "<div><div class=\"svc-name\">"+s.name+"</div><div class=\"svc-url\">"+s.url+"</div></div>"+
+      '<span class="badge '+(s.status==="online"?"bg-g":"bg-w")+'">'+s.status+"</span></div>"
+    ).join("")+"</div>";
+  }catch(e){document.getElementById("svcList").innerHTML='<div class="loading">Internal API unreachable</div>';}
+}
+
+async function fetchMetrics(){
+  try{
+    const d=(await(await fetch("/api/metrics")).json()).data||{};
+    if(d.totalBandwidth)document.getElementById("sBw").textContent=d.totalBandwidth;
+    if(d.uptime)document.getElementById("sUp").textContent=d.uptime;
+  }catch{}
+}
+
+async function fetchHealth(){
+  try{
+    const d=await(await fetch("/api/health")).json();
+    const ok=d.internalApi==="ok";
+    document.getElementById("dot").className="dot"+(ok?"":" off");
+    document.getElementById("vpnStatus").textContent=ok?"VPN Online":"Starting...";
+  }catch{}
+}
+
+function renderChart(){
+  const mx=Math.max(...traffic.map(d=>d.rx));
+  const now=new Date();
+  document.getElementById("bars").innerHTML=traffic.map(d=>
+    '<div class="bg-group"><div class="b b-rx" style="height:'+Math.round(d.rx/mx*100)+'%"></div>'+
+    '<div class="b b-tx" style="height:'+Math.round(d.tx/mx*100)+'%"></div></div>'
+  ).join("");
+  document.getElementById("clabels").innerHTML=traffic.map((_,i)=>{
+    const t=new Date(now-(11-i)*30000);
+    return'<div class="cl">'+t.getMinutes()+":"+String(t.getSeconds()).padStart(2,"0")+"</div>";
+  }).join("");
+}
+
+function refresh(){
+  fetchPeers();fetchServices();fetchMetrics();fetchHealth();
+  traffic.push({rx:Math.random()*80+10,tx:Math.random()*40+5});
+  traffic.shift();renderChart();
+}
+
+refresh();
+setInterval(refresh,15000);
+</script>
+</body>
+</html>
